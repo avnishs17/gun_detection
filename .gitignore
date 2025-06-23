@@ -1,0 +1,5 @@
+.venv/*
+__pycache__/
+gun_detection.egg-info
+artifacts/raw/
+artifacts/models/
