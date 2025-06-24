@@ -7,6 +7,7 @@ opencv-python-headless
 torchvision
 tensorboard
 dvc
+dvc-gs
 fastapi[all]
 uvicorn
 Pillow
