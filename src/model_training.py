@@ -108,7 +108,7 @@ class ModelTraining:
                 
                 model_path = os.path.join(model_save_path,"fasterrcnn.pth")
                 torch.save(self.model.state_dict() , model_path)
-                logger.info(f"Model saved sucesfuly...")
+                logger.info("Model saved sucesfuly.")
 
         except Exception as e:
             logger.error(f"Failed to do train model {e}")

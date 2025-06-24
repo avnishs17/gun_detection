@@ -1,5 +1,4 @@
 from torch.optim import Adam
-from torchvision.models.detection import fasterrcnn_resnet50_fpn
 from torchvision.models.detection import fasterrcnn_resnet50_fpn, FasterRCNN_ResNet50_FPN_Weights
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from tqdm import tqdm
