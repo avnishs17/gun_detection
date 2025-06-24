@@ -4,3 +4,4 @@ gun_detection.egg-info
 artifacts/raw/
 artifacts/models/
 tensorboard_logs/
+logs/*

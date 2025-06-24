@@ -1,5 +1,6 @@
 from torch.optim import Adam
 from torchvision.models.detection import fasterrcnn_resnet50_fpn
+from torchvision.models.detection import fasterrcnn_resnet50_fpn, FasterRCNN_ResNet50_FPN_Weights
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from tqdm import tqdm
 from src.logger import get_logger
@@ -15,15 +16,22 @@ class FasterRCNNModel:
         self.model = self.create_model().to(self.device)
         logger.info("Model Architecture intialized")
     
+
     def create_model(self):
         try:
-            model = fasterrcnn_resnet50_fpn(pretrained=True)
+            # Use the recommended way to load weights
+            weights = FasterRCNN_ResNet50_FPN_Weights.COCO_V1
+            model = fasterrcnn_resnet50_fpn(weights=weights)
+
+            # Modify the classifier head
             in_features = model.roi_heads.box_predictor.cls_score.in_features
-            model.roi_heads.box_predictor = FastRCNNPredictor(in_features , self.num_classes)
+            model.roi_heads.box_predictor = FastRCNNPredictor(in_features, self.num_classes)
+
             return model
+
         except Exception as e:
-            logger.error(f"Failed to create model {e}")
-            raise CustomException("Failed to create model " , e)
+            logger.error(f"Failed to create model: {e}")
+            raise CustomException("Failed to create model", e)
     
     def compile(self,lr=1e-4):
         try:
