@@ -8,7 +8,6 @@ from src.custom_exception import CustomException
 from src.data_processing import GunDataset
 from torch.utils.tensorboard import SummaryWriter
 import time
-import numpy as np
 
 logger = get_logger(__name__)
 
@@ -24,7 +23,7 @@ class ModelTraining:
         self.dataset_path = dataset_path
         self.device = device
 
-        # Tensorboard
+        #### Tensorboard
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         self.log_dir = f"tensorboard_logs/{timestamp}"
         os.makedirs(self.log_dir,exist_ok=True)
@@ -73,9 +72,6 @@ class ModelTraining:
             for epoch in range(self.epochs):
                 logger.info(f"Starting epoch {epoch}")
                 self.model.train()
-                
-                # Track epoch metrics
-                epoch_losses = []
 
                 for i,(images,targets) in enumerate(train_loader):
                     self.optimizer.zero_grad()
@@ -83,63 +79,36 @@ class ModelTraining:
 
                     if isinstance(losses,dict):
                         total_loss=0
-                        # Log individual loss components
                         for key,value in losses.items():
                             if isinstance(value , torch.Tensor):
                                 total_loss+=value
-                                # Log each loss component separately
-                                self.writer.add_scalar(f"Loss_Components/{key}", value.item(), epoch*len(train_loader)+i)
                         
                         if total_loss==0:
                             logger.error("There was error in losses capturing")
                             raise ValueError("Total value is Zero...")
                         
                         self.writer.add_scalar("Loss/train" , total_loss.item() , epoch*len(train_loader)+i)
-                        epoch_losses.append(total_loss.item())
                     
                     else:
                         total_loss=losses[0]
                         self.writer.add_scalar("Loss/train" , total_loss.item() , epoch*len(train_loader)+i)
-                        epoch_losses.append(total_loss.item())
 
+                    
                     total_loss.backward()
                     self.optimizer.step()
-                
-                # Log epoch average loss
-                avg_epoch_loss = np.mean(epoch_losses)
-                self.writer.add_scalar("Loss/train_epoch_avg", avg_epoch_loss, epoch)
-                
+
                 self.writer.flush()
                 
                 self.model.eval()
-                val_losses = []
                 with torch.no_grad():
                     for images,targets in val_loader:
-                        val_loss_dict = self.model(images,targets)
-                        
-                        if isinstance(val_loss_dict,dict):
-                            total_val_loss = 0
-                            for key,value in val_loss_dict.items():
-                                if isinstance(value , torch.Tensor):
-                                    total_val_loss += value
-                            val_losses.append(total_val_loss.item())
-                        else:
-                            val_losses.append(val_loss_dict[0].item())
-                
-                # Log validation metrics
-                if val_losses:
-                    avg_val_loss = np.mean(val_losses)
-                    self.writer.add_scalar("Loss/validation", avg_val_loss, epoch)
-                    # Compare train vs validation
-                    self.writer.add_scalars("Loss/train_vs_val", {
-                        'train': avg_epoch_loss,
-                        'validation': avg_val_loss
-                    }, epoch)
-                    logger.info(f"Epoch {epoch}: Train Loss: {avg_epoch_loss:.4f}, Val Loss: {avg_val_loss:.4f}")
+                        val_losses = self.model(images,targets)
+                        logger.info(type(val_losses))
+                        logger.info(f"VAL_LOSS : {val_losses}")
                 
                 model_path = os.path.join(model_save_path,"fasterrcnn.pth")
                 torch.save(self.model.state_dict() , model_path)
-                logger.info("Model saved sucesfuly.")
+                logger.info(f"Model saved sucesfuly...")
 
         except Exception as e:
             logger.error(f"Failed to do train model {e}")
@@ -154,6 +123,7 @@ if __name__=="__main__":
                              learning_rate=0.0001,
                              dataset_path="artifacts/raw/",
                              device=device,
-                             epochs=1)
+                             epochs=30)
     
     training.train()
+    
